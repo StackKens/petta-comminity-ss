@@ -1573,7 +1573,7 @@ function AchievementsAndTestimonials() {
           </div>
 
           {/* Card Carousel */}
-          <div ref={containerRef} className="mt-14 overflow-hidden">
+          <div ref={containerRef} className="mt-14 -mx-4 overflow-hidden px-4 sm:mx-0 sm:px-0">
             <div
               className="flex"
               style={{
