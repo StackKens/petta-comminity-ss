@@ -169,7 +169,7 @@ function SchoolMark({ compact = false }: { compact?: boolean }) {
       <img
         src="/logo.jpg"
         alt="Petta Community Secondary School logo"
-        className="h-11 w-11 shrink-0 rounded-full object-cover"
+        className="h-11 w-11 shrink-0 object-cover"
       />
       <div className="leading-none">
         <div className="font-display text-[1.05rem] font-semibold tracking-tight text-[hsl(var(--primary-foreground))]">
