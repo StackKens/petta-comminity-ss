@@ -1,12 +1,12 @@
-import { type FormEvent, type ReactNode, useState } from "react";
+import { type FormEvent, type ReactNode, useState, useEffect, useRef, useCallback } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   ArrowDownRight,
   ArrowUpRight,
   BookOpen,
-  CalendarDays,
   Check,
   CheckCircle2,
+  ChevronLeft,
   ChevronRight,
   Clock3,
   ExternalLink,
@@ -16,7 +16,6 @@ import {
   HeartHandshake,
   Instagram,
   Laptop,
-  LibraryBig,
   Mail,
   MapPin,
   Menu,
@@ -129,34 +128,42 @@ const facilities = [
 const newsItems = [
   {
     category: "School update",
-    date: "[Insert date]",
-    title: "A new term begins with purpose",
+    date: "14 September 2026",
+    title: "Term 3 begins",
     excerpt:
-      "Share the welcome message, key dates and practical information families need for the term ahead.",
-    image: imageSources.students,
+      "Term 3 begins on Monday, 14 September 2026. All students are expected to report on time.",
+    content:
+      "We welcome all students back for Term 3. Classes resume on Monday, 14 September 2026. Please ensure all school fees and requirements are cleared before reporting. Boarding students should report by 5:00 PM on Sunday, 13 September 2026. Day students should report by 7:30 AM on Monday. We look forward to a productive and rewarding term.",
+    image: imageSources.alevel,
   },
   {
     category: "Academics",
-    date: "[Insert date]",
-    title: "Learning that reaches beyond the classroom",
+    date: "TBA",
+    title: "O-Level and A-Level preparation begins",
     excerpt:
-      "A future story about a lesson, project or department bringing the school’s academic promise to life.",
-    image: imageSources.classroom,
+      "Final preparation sessions for O-Level and A-Level candidates will commence this term.",
+    content:
+      "This term marks the final preparation period for our O-Level (S.4) and A-Level (S.6) candidates. Intensive revision classes, mock examinations, and career guidance sessions will be conducted. Parents are encouraged to support their children during this critical period.",
+    image: imageSources.modernclass,
   },
   {
     category: "Student life",
-    date: "[Insert date]",
-    title: "The moments that make school matter",
+    date: "TBA",
+    title: "Sports and activities continue",
     excerpt:
-      "Use this space for a verified update on sport, creativity, leadership or community service.",
-    image: imageSources.sport,
+      "Inter-house sports competitions and club activities resume this term.",
+    content:
+      "Term 3 brings exciting inter-house sports competitions including football, athletics, and basketball. Clubs and societies will also resume activities including debate, science club, and music. All students are encouraged to participate in at least one extracurricular activity.",
+    image: imageSources.talent,
   },
   {
     category: "Announcement",
-    date: "[Insert date]",
-    title: "Important information for families",
+    date: "4 December 2026",
+    title: "Term 3 ends",
     excerpt:
-      "A considered place for school notices, events and announcements from the leadership team.",
+      "Term 3 ends on Friday, 4 December 2026. Holiday schedule will be communicated.",
+    content:
+      "Term 3 officially ends on Friday, 4 December 2026. Report cards will be distributed on the last day of term. The holiday schedule and Term 1 (2027) opening dates will be communicated to parents in due course. We thank all families for their continued support throughout the term.",
     image: imageSources.library,
   },
 ];
@@ -174,7 +181,7 @@ function SchoolMark({ compact = false }: { compact?: boolean }) {
       data-testid="brand-school-mark"
     >
       <img
-        src="/logo.jpg"
+        src="/logo.png"
         alt="Petta Community Secondary School logo"
         className="h-11 w-11 shrink-0 object-cover"
       />
@@ -1179,7 +1186,7 @@ function Facilities({
   );
 }
 
-function News() {
+function News({ onOpen }: { onOpen: (item: (typeof newsItems)[number]) => void }) {
   const [filter, setFilter] = useState("All");
   const categories = [
     "All",
@@ -1203,7 +1210,7 @@ function News() {
           <SectionHeading
             eyebrow="News & events"
             title="What is happening at Petta."
-            copy="A considered place for school updates, events and stories from the community. Content is ready for the school’s first verified news cycle."
+            copy="Stay updated with the latest news, events and announcements from Petta Community Secondary School."
           />
           <div className="flex flex-wrap gap-2 md:justify-end">
             {categories.map((category) => (
@@ -1221,9 +1228,11 @@ function News() {
         </div>
         <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
           {filtered.map((item, index) => (
-            <article
+            <button
+              type="button"
               key={item.title}
-              className="group overflow-hidden border border-[hsl(var(--border))] bg-[hsl(var(--card))] transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-md)]"
+              onClick={() => onOpen(item)}
+              className="group overflow-hidden border border-[hsl(var(--border))] bg-[hsl(var(--card))] text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-md)]"
               data-testid={`card-news-${index}`}
             >
               <div className="h-48 overflow-hidden">
@@ -1242,20 +1251,11 @@ function News() {
                 <p className="mt-3 text-sm leading-6 text-[hsl(var(--muted-foreground))]">
                   {item.excerpt}
                 </p>
-                <button
-                  type="button"
-                  onClick={() =>
-                    window.alert(
-                      "The full article will be published here once school content is approved.",
-                    )
-                  }
-                  className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-[hsl(var(--primary))]"
-                  data-testid={`button-read-news-${index}`}
-                >
-                  Read story <ArrowUpRight size={15} />
-                </button>
+                <span className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-[hsl(var(--primary))]">
+                  Read more <ArrowUpRight size={15} />
+                </span>
               </div>
-            </article>
+            </button>
           ))}
         </div>
       </div>
@@ -1263,73 +1263,372 @@ function News() {
   );
 }
 
-function AchievementsAndTestimonials() {
+function CountUp({ target, suffix = "", duration = 2000 }: { target: number; suffix?: string; duration?: number }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef<HTMLSpanElement>(null);
+  const started = useRef(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !started.current) {
+          started.current = true;
+          const start = performance.now();
+          const step = (now: number) => {
+            const progress = Math.min((now - start) / duration, 1);
+            setCount(Math.floor(progress * target));
+            if (progress < 1) requestAnimationFrame(step);
+          };
+          requestAnimationFrame(step);
+        }
+      },
+      { threshold: 0.3 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [target, duration]);
+
   return (
-    <section
-      className="bg-[hsl(var(--primary))] py-20 text-[hsl(var(--primary-foreground))] md:py-28"
-      data-testid="section-achievements"
-    >
-      <div className="container-school grid gap-16 lg:grid-cols-[.9fr_1.1fr]">
-        <div>
-          <div className="eyebrow text-[hsl(var(--accent))]">
-            The record to come
-          </div>
-          <h2 className="mt-4 max-w-lg font-display text-4xl font-semibold leading-[.98] tracking-[-.03em] md:text-6xl">
-            Let the work speak.
-          </h2>
-          <p className="mt-6 max-w-md leading-7 text-[hsl(var(--primary-foreground)/.65)]">
-            Achievements belong here when they are verified, specific and
-            meaningful to the Petta community.
-          </p>
-          <div className="mt-10 space-y-3">
-            {[
-              "[Insert academic achievement]",
-              "[Insert sports or competition achievement]",
-              "[Insert student or alumni achievement]",
-            ].map((item, index) => (
-              <div
-                key={item}
-                className="flex items-center justify-between border-b border-[hsl(var(--primary-foreground)/.17)] py-4 text-sm"
-              >
-                <span>{item}</span>
-                <span className="font-mono-school text-[.63rem] text-[hsl(var(--accent))]">
-                  0{index + 1}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="lg:pt-20">
-          <div className="eyebrow text-[hsl(var(--accent))]">
-            Voices from the community
-          </div>
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <Testimonial
-              quote="[Insert approved parent testimonial about the learning environment and growth of their child.]"
-              role="Parent"
-            />
-            <Testimonial
-              quote="[Insert approved student or alumni testimonial about life at the school.]"
-              role="Student / Alumni"
-            />
-          </div>
-        </div>
-      </div>
-    </section>
+    <span ref={ref}>
+      {count}{suffix}
+    </span>
   );
 }
 
-function Testimonial({ quote, role }: { quote: string; role: string }) {
+const achievementStats = [
+  { value: 98, suffix: "%", label: "UCE Division 1" },
+  { value: 87, suffix: "%", label: "UACE Principal Passes" },
+  { value: 30, suffix: "+", label: "Awards & Recognitions" },
+  { value: 15, suffix: "+", label: "Years of Excellence" },
+];
+
+const achievements = [
+  {
+    year: "2026",
+    title: "Academic Excellence",
+    description: "Outstanding performance in national examinations with a 98% Division 1 pass rate in UCE.",
+    category: "Academics",
+  },
+  {
+    year: "2025",
+    title: "Regional Debate Champions",
+    description: "Students represented the school at regional level and emerged champions in the inter-school debate competition.",
+    category: "Leadership",
+  },
+  {
+    year: "2024",
+    title: "Science & Innovation",
+    description: "Students showcased innovative projects at a national science and technology competition.",
+    category: "Innovation",
+  },
+  {
+    year: "2024",
+    title: "Sports Excellence",
+    description: "District champions in football and athletics, with multiple students selected for regional teams.",
+    category: "Sports",
+  },
+];
+
+const beyondItems = [
+  { icon: <GraduationCap size={20} />, title: "Academics", description: "Rigorous curriculum that prepares students for national exams and beyond." },
+  { icon: <ShieldCheck size={20} />, title: "Leadership & Character", description: "Building principled leaders through mentorship and community service." },
+  { icon: <Laptop size={20} />, title: "Innovation & Technology", description: "Equipping students with digital skills and a passion for problem-solving." },
+  { icon: <Trophy size={20} />, title: "Sports, Arts & Talent", description: "Nurturing every student's unique gifts through clubs, competitions and cultural events." },
+];
+
+const testimonials = [
+  {
+    quote: "The school gave me more than academic knowledge. It gave me the confidence, discipline and foundation to pursue my goals.",
+    name: "Sarah Namukasa",
+    role: "Alumni",
+    detail: "Former Student · Class of 2024",
+    image: imageSources.alevel,
+  },
+  {
+    quote: "As a parent, I have watched my child grow not just in grades but in character. Petta is more than a school — it is a community that cares.",
+    name: "Mr. David Okello",
+    role: "Parent",
+    detail: "Parent of S.3 Student",
+    image: imageSources.hm,
+  },
+  {
+    quote: "Teaching at Petta has been the most fulfilling experience. The students are eager, the environment is supportive, and the vision is clear.",
+    name: "Mrs. Grace Auma",
+    role: "Teacher",
+    detail: "Senior Teacher · 8 Years",
+    image: imageSources.modernclass,
+  },
+  {
+    quote: "From my first day in S.1 to my final exams in S.4, Petta shaped me into someone who believes in hard work and integrity.",
+    name: "James Mukisa",
+    role: "Alumni",
+    detail: "Former Student · Class of 2022",
+    image: imageSources.students,
+  },
+];
+
+function AchievementsAndTestimonials() {
+  const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const [activeFilter, setActiveFilter] = useState("All");
+
+  const roleFilters = ["All", "Student", "Parent", "Alumni", "Teacher"];
+  const filteredTestimonials =
+    activeFilter === "All"
+      ? testimonials
+      : testimonials.filter((t) => t.role === activeFilter);
+
+  const nextTestimonial = useCallback(() => {
+    setActiveTestimonial((prev) => (prev + 1) % filteredTestimonials.length);
+  }, [filteredTestimonials.length]);
+
+  const prevTestimonial = useCallback(() => {
+    setActiveTestimonial((prev) => (prev - 1 + filteredTestimonials.length) % filteredTestimonials.length);
+  }, [filteredTestimonials.length]);
+
+  useEffect(() => {
+    setActiveTestimonial(0);
+  }, [activeFilter]);
+
+  useEffect(() => {
+    const timer = setInterval(nextTestimonial, 6000);
+    return () => clearInterval(timer);
+  }, [nextTestimonial, activeFilter]);
+
+  const current = filteredTestimonials[activeTestimonial] ?? filteredTestimonials[0];
+
   return (
-    <figure className="border border-[hsl(var(--primary-foreground)/.17)] bg-[hsl(var(--primary-foreground)/.05)] p-6">
-      <Quote size={20} className="text-[hsl(var(--accent))]" />
-      <blockquote className="mt-7 font-display text-xl leading-tight">
-        {quote}
-      </blockquote>
-      <figcaption className="mt-7 font-mono-school text-[.62rem] uppercase tracking-[.13em] text-[hsl(var(--primary-foreground)/.55)]">
-        {role} · [Name to be confirmed]
-      </figcaption>
-    </figure>
+    <>
+      {/* ACHIEVEMENTS SECTION */}
+      <section
+        className="bg-[hsl(var(--background))] py-20 md:py-28"
+        data-testid="section-achievements"
+      >
+        <div className="container-school">
+          {/* Header */}
+          <div className="max-w-3xl">
+            <span className="font-mono-school text-[.65rem] font-bold uppercase tracking-[.15em] text-[hsl(var(--primary))]">
+              Our Achievements
+            </span>
+            <h2 className="mt-4 font-display text-4xl font-semibold leading-[.97] tracking-[-.03em] md:text-6xl">
+              Let the Work Speak.
+            </h2>
+            <p className="mt-5 max-w-xl text-lg leading-relaxed text-[hsl(var(--muted-foreground))]">
+              Excellence isn't something we claim. It's something we demonstrate — through our results, our students, and our impact.
+            </p>
+          </div>
+
+          {/* Statistics */}
+          <div className="mt-16 grid grid-cols-2 gap-6 lg:grid-cols-4">
+            {achievementStats.map((stat) => (
+              <div
+                key={stat.label}
+                className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-sm transition-shadow hover:shadow-md"
+              >
+                <div className="font-display text-5xl font-bold text-[hsl(var(--primary))] md:text-6xl">
+                  <CountUp target={stat.value} suffix={stat.suffix} />
+                </div>
+                <p className="mt-3 font-mono-school text-[.65rem] uppercase tracking-[.12em] text-[hsl(var(--muted-foreground))]">
+                  {stat.label}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Achievement Timeline */}
+          <div className="mt-20">
+            <span className="font-mono-school text-[.65rem] font-bold uppercase tracking-[.15em] text-[hsl(var(--primary))]">
+              Our Record
+            </span>
+            <h3 className="mt-3 font-display text-3xl font-semibold md:text-4xl">
+              A Legacy of Achievement
+            </h3>
+            <div className="mt-12 space-y-0">
+              {achievements.map((item) => (
+                <div
+                  key={item.title}
+                  className="group relative flex gap-6 border-l-2 border-[hsl(var(--border))] py-8 pl-8 transition-colors hover:border-[hsl(var(--primary))]"
+                >
+                  <div className="absolute -left-[9px] top-8 h-4 w-4 rounded-full border-2 border-[hsl(var(--border))] bg-[hsl(var(--background))] transition-colors group-hover:border-[hsl(var(--primary))] group-hover:bg-[hsl(var(--primary))]" />
+                  <div className="flex-1">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="font-mono-school text-xs font-bold tracking-wider text-[hsl(var(--primary))]">
+                        {item.year}
+                      </span>
+                      <span className="rounded-full bg-[hsl(var(--primary)/.08)] px-3 py-1 font-mono-school text-[.6rem] font-bold uppercase tracking-[.1em] text-[hsl(var(--primary))]">
+                        {item.category}
+                      </span>
+                    </div>
+                    <h4 className="mt-3 font-display text-xl font-semibold">
+                      {item.title}
+                    </h4>
+                    <p className="mt-2 max-w-lg text-sm leading-relaxed text-[hsl(var(--muted-foreground))]">
+                      {item.description}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Beyond the Classroom */}
+          <div className="mt-20 grid gap-10 lg:grid-cols-2 lg:items-center">
+            <div className="overflow-hidden rounded-2xl">
+              <img
+                src={imageSources.talent}
+                alt="Students participating in school activities"
+                className="h-80 w-full object-cover transition-transform duration-500 hover:scale-105 md:h-[420px]"
+              />
+            </div>
+            <div>
+              <span className="font-mono-school text-[.65rem] font-bold uppercase tracking-[.15em] text-[hsl(var(--primary))]">
+                Beyond the Classroom
+              </span>
+              <h3 className="mt-3 font-display text-3xl font-semibold md:text-4xl">
+                Education That Shapes the Whole Student
+              </h3>
+              <p className="mt-4 max-w-lg text-[hsl(var(--muted-foreground))]">
+                At Petta, learning extends far beyond textbooks. We nurture talent, character, leadership and innovation.
+              </p>
+              <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+                {beyondItems.map((item) => (
+                  <div key={item.title} className="flex gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[hsl(var(--primary)/.08)] text-[hsl(var(--primary))]">
+                      {item.icon}
+                    </div>
+                    <div>
+                      <h4 className="font-display text-sm font-semibold">{item.title}</h4>
+                      <p className="mt-1 text-xs leading-relaxed text-[hsl(var(--muted-foreground))]">
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <a
+                href="#student-life"
+                className="mt-8 inline-flex items-center gap-2 rounded-xl bg-[hsl(var(--primary))] px-6 py-3 text-sm font-semibold text-[hsl(var(--primary-foreground))] transition-opacity hover:opacity-90"
+              >
+                Explore Student Life <ArrowUpRight size={16} />
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* TESTIMONIALS SECTION */}
+      <section
+        className="bg-[hsl(var(--primary))] py-20 text-[hsl(var(--primary-foreground))] md:py-28"
+        data-testid="section-testimonials"
+      >
+        <div className="container-school">
+          {/* Header */}
+          <div className="text-center">
+            <span className="font-mono-school text-[.65rem] font-bold uppercase tracking-[.15em] text-[hsl(var(--accent))]">
+              Voices From Our Community
+            </span>
+            <h2 className="mt-4 font-display text-4xl font-semibold leading-[.97] tracking-[-.03em] md:text-5xl">
+              What Our Community Says.
+            </h2>
+            <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-[hsl(var(--primary-foreground)/.7)]">
+              A school experience that stays with you.
+            </p>
+          </div>
+
+          {/* Role Filters */}
+          <div className="mt-10 flex flex-wrap justify-center gap-2">
+            {roleFilters.map((role) => (
+              <button
+                key={role}
+                type="button"
+                onClick={() => setActiveFilter(role)}
+                className={`rounded-full border px-4 py-2 font-mono-school text-[.65rem] font-bold uppercase tracking-[.12em] transition-colors ${
+                  activeFilter === role
+                    ? "border-[hsl(var(--accent))] bg-[hsl(var(--accent))] text-[hsl(var(--primary))]"
+                    : "border-[hsl(var(--primary-foreground)/.2)] text-[hsl(var(--primary-foreground)/.6)] hover:border-[hsl(var(--primary-foreground)/.4)]"
+                }`}
+              >
+                {role}
+              </button>
+            ))}
+          </div>
+
+          {/* Featured Testimonial */}
+          {current && (
+            <div className="mt-14 grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:items-center">
+              {/* Quote Side */}
+              <div>
+                <Quote size={40} className="text-[hsl(var(--accent))]" />
+                <blockquote className="mt-6 font-display text-2xl font-medium leading-snug md:text-3xl">
+                  {current.quote}
+                </blockquote>
+                <div className="mt-8 flex items-center gap-4">
+                  <img
+                    src={current.image}
+                    alt={current.name}
+                    className="h-14 w-14 rounded-full object-cover ring-2 ring-[hsl(var(--accent)/.3)]"
+                  />
+                  <div>
+                    <div className="font-display text-base font-semibold">
+                      {current.name}
+                    </div>
+                    <div className="font-mono-school text-[.6rem] uppercase tracking-[.12em] text-[hsl(var(--primary-foreground)/.55)]">
+                      {current.detail}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Image Side */}
+              <div className="relative">
+                <div className="absolute -inset-4 rounded-3xl bg-[hsl(var(--accent)/.1)]" />
+                <img
+                  src={current.image}
+                  alt={current.name}
+                  className="relative h-80 w-full rounded-2xl object-cover md:h-[400px]"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Navigation */}
+          <div className="mt-10 flex items-center justify-center gap-4">
+            <button
+              type="button"
+              onClick={prevTestimonial}
+              aria-label="Previous testimonial"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-[hsl(var(--primary-foreground)/.2)] text-[hsl(var(--primary-foreground)/.6)] transition-colors hover:border-[hsl(var(--primary-foreground)/.5)] hover:text-[hsl(var(--primary-foreground))]"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <div className="flex gap-2">
+              {filteredTestimonials.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setActiveTestimonial(i)}
+                  aria-label={`Go to testimonial ${i + 1}`}
+                  className={`h-2.5 rounded-full transition-all ${
+                    i === activeTestimonial
+                      ? "w-7 bg-[hsl(var(--accent))]"
+                      : "w-2.5 bg-[hsl(var(--primary-foreground)/.25)]"
+                  }`}
+                />
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={nextTestimonial}
+              aria-label="Next testimonial"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-[hsl(var(--primary-foreground)/.2)] text-[hsl(var(--primary-foreground)/.6)] transition-colors hover:border-[hsl(var(--primary-foreground)/.5)] hover:text-[hsl(var(--primary-foreground))]"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        </div>
+      </section>
+    </>
   );
 }
 
@@ -1720,9 +2019,66 @@ function Modal({
   );
 }
 
+function NewsModal({
+  news,
+  onClose,
+}: {
+  news: (typeof newsItems)[number] | null;
+  onClose: () => void;
+}) {
+  if (!news) return null;
+  return (
+    <div
+      className="fixed inset-0 z-50 grid place-items-center bg-[hsl(var(--primary)/.8)] p-4 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-label={news.title}
+      data-testid="modal-news"
+    >
+      <div className="relative w-full max-w-2xl overflow-hidden bg-[hsl(var(--card))] shadow-[var(--shadow-lg)]">
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close news details"
+          className="absolute right-4 top-4 z-10 grid h-10 w-10 place-items-center rounded-full bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]"
+          data-testid="button-close-news"
+        >
+          <X size={18} />
+        </button>
+        <div className="h-64 sm:h-80">
+          <ImageFrame
+            src={news.image}
+            alt={news.title}
+            className="h-full w-full"
+          />
+        </div>
+        <div className="p-7">
+          <div className="flex items-center justify-between">
+            <div className="eyebrow text-[hsl(var(--accent-foreground))]">
+              {news.category}
+            </div>
+            <span className="font-mono-school text-[.65rem] uppercase tracking-[.1em] text-[hsl(var(--muted-foreground))]">
+              {news.date}
+            </span>
+          </div>
+          <h2 className="mt-3 font-display text-4xl font-semibold">
+            {news.title}
+          </h2>
+          <p className="mt-4 max-w-lg leading-7 text-[hsl(var(--muted-foreground))]">
+            {news.content}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [facility, setFacility] = useState<(typeof facilities)[number] | null>(
+    null,
+  );
+  const [newsItem, setNewsItem] = useState<(typeof newsItems)[number] | null>(
     null,
   );
   return (
@@ -1737,12 +2093,13 @@ function Home() {
         <WhyChoose />
         <StudentLife />
         <Facilities onOpen={setFacility} />
-        <News />
+        <News onOpen={setNewsItem} />
         <AchievementsAndTestimonials />
         <Contact />
       </main>
       <Footer />
       <Modal facility={facility} onClose={() => setFacility(null)} />
+      <NewsModal news={newsItem} onClose={() => setNewsItem(null)} />
     </div>
   );
 }
