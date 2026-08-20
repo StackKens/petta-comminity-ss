@@ -842,26 +842,30 @@ function Admissions() {
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <AdmissionCard
-              title="O-Level admissions"
+              title="O-Level (S.1–S.4)"
               icon={<BookOpen size={22} />}
               items={[
-                "[Insert entry requirements]",
-                "[Insert application process]",
-                "[Insert required documents]",
-                "[Insert fees information]",
-                "[Insert important dates]",
+                "PLE Results Slip",
+                "Admission Letter",
+                "Passport Photo",
+                "Birth Certificate / ID",
+                "Parent/Guardian ID",
+                "Previous School Records",
+                "Admission/Interview requirements",
               ]}
               testId="card-admission-olevel"
             />
             <AdmissionCard
-              title="A-Level admissions"
+              title="A-Level (S.5–S.6)"
               icon={<GraduationCap size={22} />}
               items={[
-                "[Insert entry requirements]",
-                "[Insert application process]",
-                "[Insert required documents]",
-                "[Insert fees information]",
-                "[Insert important dates]",
+                "UCE Results Slip",
+                "Admission Letter",
+                "Passport Photo",
+                "Birth Certificate / ID",
+                "Parent/Guardian ID",
+                "Previous School Records",
+                "Required grades for chosen combination",
               ]}
               testId="card-admission-alevel"
             />
