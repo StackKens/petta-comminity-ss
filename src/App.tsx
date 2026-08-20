@@ -217,7 +217,7 @@ function Hero() {
           <div className="reveal reveal-delay-2 border-l border-[hsl(var(--primary-foreground)/.3)] pl-6">
             <div className="eyebrow text-[hsl(var(--primary-foreground)/.55)]">Our learning pathways</div>
             <div className="mt-5 flex flex-wrap gap-2">
-              {['O-Level', 'A-Level', '[Confirm: Day & Boarding]'].map((item) => <span key={item} className="rounded-full border border-[hsl(var(--primary-foreground)/.25)] px-3 py-2 text-xs text-[hsl(var(--primary-foreground)/.82)]">{item}</span>)}
+              {['O-Level', 'A-Level', 'Day & Boarding'].map((item) => <span key={item} className="rounded-full border border-[hsl(var(--primary-foreground)/.25)] px-3 py-2 text-xs text-[hsl(var(--primary-foreground)/.82)]">{item}</span>)}
             </div>
             <p className="mt-5 text-xs leading-5 text-[hsl(var(--primary-foreground)/.48)]">A place for serious learning, steady growth and a life of contribution.</p>
           </div>
