@@ -6,7 +6,6 @@ import {
   BookOpen,
   Check,
   CheckCircle2,
-  ChevronLeft,
   ChevronRight,
   Clock3,
   ExternalLink,
@@ -1371,136 +1370,27 @@ const testimonials = [
 
 function AchievementsAndTestimonials() {
   const N = testimonials.length;
-  const CARD_W = 280;
-  const CARD_GAP = 20;
-  const CARD_TOTAL = CARD_W + CARD_GAP;
-
-  const [centerIndex, setCenterIndex] = useState(N);
-  const [transitionEnabled, setTransitionEnabled] = useState(true);
-  const [dragOffset, setDragOffset] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
 
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [containerWidth, setContainerWidth] = useState(0);
-  const needsResetRef = useRef<"forward" | "backward" | null>(null);
-  const dragStartRef = useRef({ x: 0, time: 0, index: N });
-  const isDraggingRef = useRef(false);
-  const dragOffsetRef = useRef(0);
-  const autoplayRef = useRef<ReturnType<typeof setInterval>>(undefined);
+  const goNext = useCallback(() => {
+    setActiveIndex((prev) => (prev + 1) % N);
+  }, [N]);
 
-  const displayItems = [...testimonials, ...testimonials, ...testimonials];
-  const dataIndex = ((centerIndex % N) + N) % N;
-  const current = testimonials[dataIndex];
-
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const measure = () => setContainerWidth(el.getBoundingClientRect().width);
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  const getTrackX = useCallback(
-    (ci: number, vw: number) => (vw - CARD_W) / 2 - ci * CARD_TOTAL,
+  const goTo = useCallback(
+    (i: number) => {
+      setActiveIndex(i);
+    },
     [],
   );
 
-  const goNext = useCallback(() => {
-    setTransitionEnabled(true);
-    setCenterIndex((prev) => {
-      const next = prev + 1;
-      if (next >= 2 * N) needsResetRef.current = "forward";
-      return next;
-    });
-  }, [N]);
-
-  const goPrev = useCallback(() => {
-    setTransitionEnabled(true);
-    setCenterIndex((prev) => {
-      const next = prev - 1;
-      if (next <= 0) needsResetRef.current = "backward";
-      return next;
-    });
-  }, [N]);
-
-  const handleTransitionEnd = useCallback(() => {
-    if (!needsResetRef.current) return;
-    setTransitionEnabled(false);
-    setCenterIndex(
-      needsResetRef.current === "forward" ? N : 2 * N - 1,
-    );
-    needsResetRef.current = null;
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => setTransitionEnabled(true));
-    });
-  }, [N]);
-
-  const handlePointerDown = useCallback(
-    (e: React.PointerEvent) => {
-      isDraggingRef.current = false;
-      dragStartRef.current = {
-        x: e.clientX,
-        time: Date.now(),
-        index: centerIndex,
-      };
-      setTransitionEnabled(false);
-      (e.target as HTMLElement).setPointerCapture(e.pointerId);
-    },
-    [centerIndex],
-  );
-
-  const handlePointerMove = useCallback((e: React.PointerEvent) => {
-    const dx = e.clientX - dragStartRef.current.x;
-    if (Math.abs(dx) > 5) isDraggingRef.current = true;
-    dragOffsetRef.current = dx;
-    setDragOffset(dx);
-  }, []);
-
-  const handlePointerUp = useCallback(() => {
-    setTransitionEnabled(true);
-    if (!isDraggingRef.current) {
-      setDragOffset(0);
-      return;
-    }
-    const dx = dragOffsetRef.current;
-    const elapsed = Date.now() - dragStartRef.current.time;
-    const velocity = dx / Math.max(elapsed, 1);
-    const distanceCards = -dx / CARD_TOTAL;
-    const velocityCards = velocity * 200;
-    const cardsMoved = Math.round(distanceCards + velocityCards);
-    const startCI = dragStartRef.current.index;
-    const targetCI = Math.max(
-      1,
-      Math.min(startCI + cardsMoved, 2 * N - 2),
-    );
-    setCenterIndex(targetCI);
-    setDragOffset(0);
-    isDraggingRef.current = false;
-  }, [N]);
-
   useEffect(() => {
-    if (isHovered) {
-      clearInterval(autoplayRef.current);
-      return;
-    }
-    autoplayRef.current = setInterval(goNext, 5000);
-    return () => clearInterval(autoplayRef.current);
+    if (isHovered) return;
+    const timer = setInterval(goNext, 5000);
+    return () => clearInterval(timer);
   }, [goNext, isHovered]);
 
-  const getCardMeta = (di: number) => {
-    const distance = Math.abs(di - centerIndex);
-    const isActive = distance === 0;
-    return {
-      scale: isActive ? 1 : distance === 1 ? 0.88 : 0.78,
-      opacity: isActive ? 1 : distance === 1 ? 0.65 : 0.4,
-      translateY: isActive ? -8 : 0,
-      rotateY: distance === 0 ? 0 : di < centerIndex ? -3 : 3,
-    };
-  };
-
-  const trackX = getTrackX(centerIndex, containerWidth) + dragOffset;
+  const current = testimonials[activeIndex];
 
   return (
     <>
@@ -1622,23 +1512,13 @@ function AchievementsAndTestimonials() {
         </div>
       </section>
 
-      {/* ── TESTIMONIALS — CINEMATIC CAROUSEL ── */}
+      {/* ── TESTIMONIALS ── */}
       <section
         className="relative overflow-hidden bg-[hsl(216,40%,97%)] py-20 md:py-28"
         data-testid="section-testimonials"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Subtle oversized quotation marks */}
-        <div className="pointer-events-none absolute inset-0 select-none overflow-hidden">
-          <span className="absolute -right-10 -top-16 font-display text-[280px] leading-none text-[hsl(var(--primary)/.04)]">
-            &ldquo;
-          </span>
-          <span className="absolute -bottom-24 -left-10 font-display text-[280px] leading-none text-[hsl(var(--primary)/.04)]">
-            &rdquo;
-          </span>
-        </div>
-
         <div className="relative container-school">
           {/* Header */}
           <div className="text-center">
@@ -1656,133 +1536,59 @@ function AchievementsAndTestimonials() {
             </p>
           </div>
 
-          {/* Main composition — quote left, carousel right */}
-          <div className="mt-16 grid gap-10 lg:grid-cols-[2fr_3fr] lg:items-center">
-            {/* Left — Animated Quote */}
-            <div className="lg:pr-8">
-              <div
-                key={dataIndex}
-                style={{ animation: "fadeInUp 0.6s ease-out both" }}
-              >
-                <span className="block font-display text-[80px] leading-none text-[hsl(var(--primary)/.12)]">
-                  &ldquo;
-                </span>
-                <blockquote className="mt-2 max-w-md font-display text-2xl font-medium leading-snug text-[hsl(var(--foreground))] md:text-3xl">
-                  {current.quote}
-                </blockquote>
-                <div className="mt-8">
-                  <div className="font-display text-lg font-semibold text-[hsl(var(--foreground))]">
+          {/* Single Card Carousel */}
+          <div className="mx-auto mt-14 max-w-[820px] overflow-hidden">
+            <div
+              key={activeIndex}
+              className="relative rounded-xl border border-white/60 bg-white/70 p-10 shadow-[0_8px_40px_-12px_hsl(var(--primary)/.12)] backdrop-blur-xl md:px-14 md:py-16"
+              style={{ animation: "fadeInUp 0.5s ease-out both" }}
+            >
+              {/* Decorative quote mark */}
+              <span className="absolute left-8 top-4 font-display text-[7rem] leading-none text-[hsl(var(--primary)/.08)] select-none md:left-12 md:top-6">
+                &ldquo;
+              </span>
+
+              {/* Quote */}
+              <blockquote className="relative z-10 mt-12 text-center font-display text-xl font-medium italic leading-relaxed text-[hsl(var(--foreground)/.85)] md:text-2xl md:leading-relaxed">
+                {current.quote}
+              </blockquote>
+
+              {/* Author */}
+              <div className="relative z-10 mt-12 flex items-center justify-center gap-4">
+                <div className="h-14 w-14 overflow-hidden rounded-full border-2 border-[hsl(var(--primary)/.15)] shadow-md">
+                  <img
+                    src={current.image}
+                    alt={current.name}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div className="text-left">
+                  <div className="font-display text-base font-semibold text-[hsl(var(--foreground))]">
                     {current.name}
                   </div>
-                  <div className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">
+                  <div className="mt-0.5 text-sm text-[hsl(var(--muted-foreground))]">
                     {current.detail}
-                  </div>
-                  <div className="mt-3 inline-block rounded-full bg-[hsl(var(--primary)/.08)] px-3 py-1 font-mono-school text-[.6rem] font-bold uppercase tracking-[.12em] text-[hsl(var(--primary))]">
-                    {current.role}
                   </div>
                 </div>
               </div>
             </div>
-
-            {/* Right — Dynamic Card Carousel */}
-            <div
-              ref={containerRef}
-              className="relative"
-              style={{ touchAction: "pan-y" }}
-            >
-              <div
-                className="flex"
-                style={{
-                  gap: CARD_GAP,
-                  transform: `translateX(${trackX}px)`,
-                  transition: transitionEnabled
-                    ? "transform 700ms cubic-bezier(0.32, 0.72, 0, 1)"
-                    : "none",
-                  willChange: "transform",
-                }}
-                onTransitionEnd={handleTransitionEnd}
-                onPointerDown={handlePointerDown}
-                onPointerMove={handlePointerMove}
-                onPointerUp={handlePointerUp}
-              >
-                {displayItems.map((item, i) => {
-                  const { scale, opacity, translateY, rotateY } =
-                    getCardMeta(i);
-                  return (
-                    <div
-                      key={`${item.name}-${i}`}
-                      className="flex-none"
-                      style={{
-                        width: CARD_W,
-                        transform: `scale(${scale}) translateY(${translateY}px) rotateY(${rotateY}deg)`,
-                        opacity,
-                        transition: transitionEnabled
-                          ? "transform 500ms ease, opacity 500ms ease"
-                          : "none",
-                      }}
-                    >
-                      <div className="overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] shadow-lg transition-shadow duration-500">
-                        <div className="aspect-[3/4] overflow-hidden">
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            className="h-full w-full object-cover transition-transform duration-700"
-                            style={{
-                              transform: `scale(${scale === 1 ? 1.05 : 1})`,
-                            }}
-                            draggable={false}
-                          />
-                        </div>
-                        <div className="p-4">
-                          <div className="font-display text-sm font-semibold text-[hsl(var(--foreground))]">
-                            {item.name}
-                          </div>
-                          <div className="mt-1 font-mono-school text-[.6rem] uppercase tracking-[.1em] text-[hsl(var(--muted-foreground))]">
-                            {item.role}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
           </div>
 
-          {/* Navigation */}
-          <div className="mt-12 flex flex-col items-center gap-4">
-            <div className="flex items-center gap-6">
+          {/* Dots */}
+          <div className="mt-8 flex justify-center gap-2.5">
+            {testimonials.map((_, i) => (
               <button
+                key={i}
                 type="button"
-                onClick={goPrev}
-                aria-label="Previous testimonial"
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--card))] text-[hsl(var(--muted-foreground))] transition-colors hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
-              >
-                <ChevronLeft size={18} />
-              </button>
-              <span className="min-w-[60px] text-center font-mono-school text-sm font-bold tracking-wider text-[hsl(var(--foreground))]">
-                {String(dataIndex + 1).padStart(2, "0")} /{" "}
-                {String(N).padStart(2, "0")}
-              </span>
-              <button
-                type="button"
-                onClick={goNext}
-                aria-label="Next testimonial"
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--card))] text-[hsl(var(--muted-foreground))] transition-colors hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
-              >
-                <ChevronRight size={18} />
-              </button>
-            </div>
-
-            {/* Progress bar */}
-            <div className="h-0.5 w-48 overflow-hidden rounded-full bg-[hsl(var(--border))]">
-              <div
-                className="h-full rounded-full bg-[hsl(var(--primary))] transition-all duration-500"
-                style={{
-                  width: `${((dataIndex + 1) / N) * 100}%`,
-                }}
+                onClick={() => goTo(i)}
+                aria-label={`Go to testimonial ${i + 1}`}
+                className={`h-3 rounded-full transition-all duration-300 ${
+                  i === activeIndex
+                    ? "w-8 bg-[hsl(var(--primary))]"
+                    : "w-3 bg-[hsl(var(--primary)/.2)] hover:bg-[hsl(var(--primary)/.35)]"
+                }`}
               />
-            </div>
+            ))}
           </div>
         </div>
       </section>
