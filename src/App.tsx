@@ -254,7 +254,7 @@ function AtAGlance() {
 }
 
 function About() {
-  const values = ['Respect', 'Discipline', 'Curiosity', 'Responsibility', 'Service'];
+  const values = ['Fear of God', 'Discipline', 'Time Management', 'Commitment & Devotion', 'Upholding Smartness', 'Respect'];
   return (
     <section id="about" className="scroll-mt-20 bg-[hsl(var(--background))] py-20 md:py-28" data-testid="section-about">
       <div className="container-school">
@@ -266,8 +266,8 @@ function About() {
           <div className="pt-2">
             <SectionHeading eyebrow="About the school" title="More than education. A foundation for life." copy="Petta Community Secondary School is being shaped as a serious, welcoming place for young people to learn well, live responsibly and find the confidence to contribute." />
             <div className="mt-10 grid gap-7 border-t border-[hsl(var(--border))] pt-7 sm:grid-cols-2">
-              <div><div className="eyebrow text-[hsl(var(--muted-foreground))]">Vision</div><p className="mt-3 text-sm leading-6">[Insert approved school vision statement]</p></div>
-              <div><div className="eyebrow text-[hsl(var(--muted-foreground))]">Mission</div><p className="mt-3 text-sm leading-6">[Insert approved school mission statement]</p></div>
+              <div><div className="eyebrow text-[hsl(var(--muted-foreground))]">Vision</div><p className="mt-3 text-sm leading-6">To be an Academic Center of Excellence that produces academically sound students who are morally upright and relevant to the society.</p></div>
+              <div><div className="eyebrow text-[hsl(var(--muted-foreground))]">Mission</div><p className="mt-3 text-sm leading-6">To teach, guide and assess students effectively towards Academic excellence and Moral Uprightness.</p></div>
             </div>
             <div className="mt-8"><div className="eyebrow text-[hsl(var(--muted-foreground))]">Our values</div><div className="mt-4 flex flex-wrap gap-2">{values.map((value) => <span key={value} className="rounded-full border border-[hsl(var(--border))] px-3 py-2 text-sm text-[hsl(var(--primary))]">{value}</span>)}</div></div>
           </div>
