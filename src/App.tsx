@@ -1370,27 +1370,46 @@ const testimonials = [
 
 function AchievementsAndTestimonials() {
   const N = testimonials.length;
-  const [activeIndex, setActiveIndex] = useState(0);
+  const CARD_W = 300;
+  const CARD_GAP = 28;
+  const cardTotal = CARD_W + CARD_GAP;
+
+  const [offset, setOffset] = useState(0);
+  const [transition, setTransition] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
+  const resetRef = useRef(false);
+
+  const track = [...testimonials, ...testimonials];
 
   const goNext = useCallback(() => {
-    setActiveIndex((prev) => (prev + 1) % N);
+    setTransition(true);
+    setOffset((prev) => {
+      const next = prev + 1;
+      if (next >= N) resetRef.current = true;
+      return next;
+    });
   }, [N]);
 
-  const goTo = useCallback(
-    (i: number) => {
-      setActiveIndex(i);
-    },
-    [],
-  );
+  const goTo = useCallback((i: number) => {
+    setTransition(true);
+    setOffset(i);
+  }, []);
+
+  const handleTransitionEnd = useCallback(() => {
+    if (!resetRef.current) return;
+    setTransition(false);
+    setOffset(0);
+    resetRef.current = false;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setTransition(true));
+    });
+  }, []);
 
   useEffect(() => {
     if (isHovered) return;
     const timer = setInterval(goNext, 5000);
     return () => clearInterval(timer);
   }, [goNext, isHovered]);
-
-  const current = testimonials[activeIndex];
 
   return (
     <>
@@ -1536,41 +1555,57 @@ function AchievementsAndTestimonials() {
             </p>
           </div>
 
-          {/* Single Card Carousel */}
-          <div className="mx-auto mt-14 max-w-[820px] overflow-hidden">
+          {/* Card Carousel */}
+          <div className="mt-14 overflow-hidden">
             <div
-              key={activeIndex}
-              className="relative rounded-xl border border-white/60 bg-white/70 p-10 shadow-[0_8px_40px_-12px_hsl(var(--primary)/.12)] backdrop-blur-xl md:px-14 md:py-16"
-              style={{ animation: "fadeInUp 0.5s ease-out both" }}
+              className="flex"
+              style={{
+                gap: CARD_GAP,
+                transform: `translateX(${-(offset * cardTotal)}px)`,
+                transition: transition
+                  ? "transform 600ms cubic-bezier(0.32, 0.72, 0, 1)"
+                  : "none",
+              }}
+              onTransitionEnd={handleTransitionEnd}
             >
-              {/* Decorative quote mark */}
-              <span className="absolute left-8 top-4 font-display text-[7rem] leading-none text-[hsl(var(--primary)/.08)] select-none md:left-12 md:top-6">
-                &ldquo;
-              </span>
+              {track.map((item, i) => (
+                <div
+                  key={`${item.name}-${i}`}
+                  className="flex-none"
+                  style={{ width: CARD_W }}
+                >
+                  <div className="flex h-full flex-col rounded-xl border border-white/60 bg-white/70 px-7 pt-10 pb-8 shadow-[0_4px_24px_-8px_hsl(var(--primary)/.1)] backdrop-blur-xl">
+                    {/* Decorative quote */}
+                    <span className="absolute left-6 top-4 font-display text-[5rem] leading-none text-[hsl(var(--primary)/.08)] select-none">
+                      &ldquo;
+                    </span>
 
-              {/* Quote */}
-              <blockquote className="relative z-10 mt-12 text-center font-display text-xl font-medium italic leading-relaxed text-[hsl(var(--foreground)/.85)] md:text-2xl md:leading-relaxed">
-                {current.quote}
-              </blockquote>
+                    {/* Quote */}
+                    <blockquote className="relative z-10 mb-8 flex-1 font-display text-[.95rem] font-medium italic leading-relaxed text-[hsl(var(--foreground)/.8)]">
+                      {item.quote}
+                    </blockquote>
 
-              {/* Author */}
-              <div className="relative z-10 mt-12 flex items-center justify-center gap-4">
-                <div className="h-14 w-14 overflow-hidden rounded-full border-2 border-[hsl(var(--primary)/.15)] shadow-md">
-                  <img
-                    src={current.image}
-                    alt={current.name}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-                <div className="text-left">
-                  <div className="font-display text-base font-semibold text-[hsl(var(--foreground))]">
-                    {current.name}
+                    {/* Author */}
+                    <div className="relative z-10 flex items-center gap-3 border-t border-[hsl(var(--primary)/.08)] pt-6">
+                      <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full border-2 border-[hsl(var(--primary)/.12)]">
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <div>
+                        <div className="font-display text-sm font-semibold text-[hsl(var(--foreground))]">
+                          {item.name}
+                        </div>
+                        <div className="mt-0.5 text-xs text-[hsl(var(--muted-foreground))]">
+                          {item.detail}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="mt-0.5 text-sm text-[hsl(var(--muted-foreground))]">
-                    {current.detail}
-                  </div>
                 </div>
-              </div>
+              ))}
             </div>
           </div>
 
@@ -1582,10 +1617,10 @@ function AchievementsAndTestimonials() {
                 type="button"
                 onClick={() => goTo(i)}
                 aria-label={`Go to testimonial ${i + 1}`}
-                className={`h-3 rounded-full transition-all duration-300 ${
-                  i === activeIndex
-                    ? "w-8 bg-[hsl(var(--primary))]"
-                    : "w-3 bg-[hsl(var(--primary)/.2)] hover:bg-[hsl(var(--primary)/.35)]"
+                className={`h-2.5 rounded-full transition-all duration-300 ${
+                  i === (offset % N)
+                    ? "w-7 bg-[hsl(var(--primary))]"
+                    : "w-2.5 bg-[hsl(var(--primary)/.2)] hover:bg-[hsl(var(--primary)/.35)]"
                 }`}
               />
             ))}
