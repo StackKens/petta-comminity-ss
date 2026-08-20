@@ -1388,7 +1388,7 @@ function AchievementsAndTestimonials() {
       const w = el.getBoundingClientRect().width;
       if (w < 400) setCardW(w - 32);
       else if (w < 700) setCardW((w - CARD_GAP) / 2);
-      else setCardW(300);
+      else setCardW(340);
     };
     measure();
     const observer = new ResizeObserver(measure);
@@ -1591,7 +1591,7 @@ function AchievementsAndTestimonials() {
                   className="flex-none"
                   style={{ width: cardW }}
                 >
-                  <div className="flex h-full flex-col rounded-[4px] border border-white/60 bg-white/70 px-7 pt-10 pb-8 shadow-[0_4px_20px_-4px_hsl(var(--primary)/.1)] backdrop-blur-xl transition-shadow duration-300 hover:shadow-[0_12px_48px_-4px_hsl(var(--primary)/.25)]">
+                  <div className="flex h-full flex-col overflow-hidden rounded-[4px] border border-white/60 bg-white/70 px-7 pt-10 pb-8 shadow-[0_4px_20px_-4px_hsl(var(--primary)/.1)] backdrop-blur-xl transition-shadow duration-300 hover:shadow-[0_12px_48px_-4px_hsl(var(--primary)/.25)]">
                     {/* Decorative quote */}
                     <span className="absolute left-6 top-4 font-display text-[5rem] leading-none text-[hsl(var(--primary)/.08)] select-none">
                       &ldquo;
