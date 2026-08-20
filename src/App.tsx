@@ -1370,16 +1370,33 @@ const testimonials = [
 
 function AchievementsAndTestimonials() {
   const N = testimonials.length;
-  const CARD_W = 300;
   const CARD_GAP = 28;
-  const cardTotal = CARD_W + CARD_GAP;
 
   const [offset, setOffset] = useState(0);
   const [transition, setTransition] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
   const resetRef = useRef(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [cardW, setCardW] = useState(300);
 
   const track = [...testimonials, ...testimonials];
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const measure = () => {
+      const w = el.getBoundingClientRect().width;
+      if (w < 400) setCardW(w - 32);
+      else if (w < 700) setCardW((w - CARD_GAP) / 2);
+      else setCardW(300);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const cardTotal = cardW + CARD_GAP;
 
   const goNext = useCallback(() => {
     setTransition(true);
@@ -1556,7 +1573,7 @@ function AchievementsAndTestimonials() {
           </div>
 
           {/* Card Carousel */}
-          <div className="mt-14 overflow-hidden">
+          <div ref={containerRef} className="mt-14 overflow-hidden">
             <div
               className="flex"
               style={{
@@ -1572,9 +1589,9 @@ function AchievementsAndTestimonials() {
                 <div
                   key={`${item.name}-${i}`}
                   className="flex-none"
-                  style={{ width: CARD_W }}
+                  style={{ width: cardW }}
                 >
-                  <div className="flex h-full flex-col rounded-lg border border-white/60 bg-white/70 px-7 pt-10 pb-8 shadow-[0_4px_24px_-8px_hsl(var(--primary)/.1)] backdrop-blur-xl">
+                  <div className="flex h-full flex-col rounded-md border border-white/60 bg-white/70 px-7 pt-10 pb-8 shadow-[0_4px_24px_-8px_hsl(var(--primary)/.1)] backdrop-blur-xl">
                     {/* Decorative quote */}
                     <span className="absolute left-6 top-4 font-display text-[5rem] leading-none text-[hsl(var(--primary)/.08)] select-none">
                       &ldquo;
