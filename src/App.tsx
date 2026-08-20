@@ -1589,9 +1589,9 @@ function Footer() {
           <div>
             <div className="eyebrow text-[hsl(var(--accent))]">Contact</div>
             <div className="mt-5 space-y-3 text-sm text-[hsl(var(--primary-foreground)/.65)]">
-              <div>Petta, West Budama, Tororo District, Eastern Uganda</div>
-              <div>+256774 398029</div>
-              <div>pettacommunitysecondaryschool@gmail.com</div>
+              <div className="flex items-start gap-2"><MapPin size={14} className="mt-0.5 shrink-0" />Petta, West Budama, Tororo District, Eastern Uganda</div>
+              <div className="flex items-center gap-2"><Phone size={14} className="shrink-0" />+256774 398029</div>
+              <div className="flex items-center gap-2"><Mail size={14} className="shrink-0" />pettacommunitysecondaryschool@gmail.com</div>
             </div>
           </div>
         </div>
