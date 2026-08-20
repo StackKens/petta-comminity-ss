@@ -1340,14 +1340,14 @@ const beyondItems = [
 
 const testimonials = [
   {
-    quote: "The school gave me more than academic knowledge. It gave me the confidence, discipline and foundation to pursue my goals.",
+    quote: "The school gave me more than academic knowledge. It gave me the confidence, discipline and foundation to pursue my dreams.",
     name: "Sarah Namukasa",
     role: "Alumni",
     detail: "Former Student · Class of 2024",
     image: imageSources.alevel,
   },
   {
-    quote: "As a parent, I have watched my child grow not just in grades but in character. Petta is more than a school — it is a community that cares.",
+    quote: "As a parent, I have watched my child grow not just in grades but in character. Petta is more than a school — it is a community that truly cares.",
     name: "Mr. David Okello",
     role: "Parent",
     detail: "Parent of S.3 Student",
@@ -1362,51 +1362,154 @@ const testimonials = [
   },
   {
     quote: "From my first day in S.1 to my final exams in S.4, Petta shaped me into someone who believes in hard work and integrity.",
-    name: "James Mukisa",
+    name: "Ofwono Alex",
     role: "Alumni",
     detail: "Former Student · Class of 2022",
-    image: imageSources.students,
+    image: "/alex.png",
   },
 ];
 
 function AchievementsAndTestimonials() {
-  const [activeTestimonial, setActiveTestimonial] = useState(0);
-  const [activeFilter, setActiveFilter] = useState("All");
+  const N = testimonials.length;
+  const CARD_W = 280;
+  const CARD_GAP = 20;
+  const CARD_TOTAL = CARD_W + CARD_GAP;
 
-  const roleFilters = ["All", "Student", "Parent", "Alumni", "Teacher"];
-  const filteredTestimonials =
-    activeFilter === "All"
-      ? testimonials
-      : testimonials.filter((t) => t.role === activeFilter);
+  const [centerIndex, setCenterIndex] = useState(N);
+  const [transitionEnabled, setTransitionEnabled] = useState(true);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
 
-  const nextTestimonial = useCallback(() => {
-    setActiveTestimonial((prev) => (prev + 1) % filteredTestimonials.length);
-  }, [filteredTestimonials.length]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+  const needsResetRef = useRef<"forward" | "backward" | null>(null);
+  const dragStartRef = useRef({ x: 0, time: 0, index: N });
+  const isDraggingRef = useRef(false);
+  const dragOffsetRef = useRef(0);
+  const autoplayRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
-  const prevTestimonial = useCallback(() => {
-    setActiveTestimonial((prev) => (prev - 1 + filteredTestimonials.length) % filteredTestimonials.length);
-  }, [filteredTestimonials.length]);
+  const displayItems = [...testimonials, ...testimonials, ...testimonials];
+  const dataIndex = ((centerIndex % N) + N) % N;
+  const current = testimonials[dataIndex];
 
   useEffect(() => {
-    setActiveTestimonial(0);
-  }, [activeFilter]);
+    const el = containerRef.current;
+    if (!el) return;
+    const measure = () => setContainerWidth(el.getBoundingClientRect().width);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const getTrackX = useCallback(
+    (ci: number, vw: number) => (vw - CARD_W) / 2 - ci * CARD_TOTAL,
+    [],
+  );
+
+  const goNext = useCallback(() => {
+    setTransitionEnabled(true);
+    setCenterIndex((prev) => {
+      const next = prev + 1;
+      if (next >= 2 * N) needsResetRef.current = "forward";
+      return next;
+    });
+  }, [N]);
+
+  const goPrev = useCallback(() => {
+    setTransitionEnabled(true);
+    setCenterIndex((prev) => {
+      const next = prev - 1;
+      if (next <= 0) needsResetRef.current = "backward";
+      return next;
+    });
+  }, [N]);
+
+  const handleTransitionEnd = useCallback(() => {
+    if (!needsResetRef.current) return;
+    setTransitionEnabled(false);
+    setCenterIndex(
+      needsResetRef.current === "forward" ? N : 2 * N - 1,
+    );
+    needsResetRef.current = null;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setTransitionEnabled(true));
+    });
+  }, [N]);
+
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      isDraggingRef.current = false;
+      dragStartRef.current = {
+        x: e.clientX,
+        time: Date.now(),
+        index: centerIndex,
+      };
+      setTransitionEnabled(false);
+      (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    },
+    [centerIndex],
+  );
+
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    const dx = e.clientX - dragStartRef.current.x;
+    if (Math.abs(dx) > 5) isDraggingRef.current = true;
+    dragOffsetRef.current = dx;
+    setDragOffset(dx);
+  }, []);
+
+  const handlePointerUp = useCallback(() => {
+    setTransitionEnabled(true);
+    if (!isDraggingRef.current) {
+      setDragOffset(0);
+      return;
+    }
+    const dx = dragOffsetRef.current;
+    const elapsed = Date.now() - dragStartRef.current.time;
+    const velocity = dx / Math.max(elapsed, 1);
+    const distanceCards = -dx / CARD_TOTAL;
+    const velocityCards = velocity * 200;
+    const cardsMoved = Math.round(distanceCards + velocityCards);
+    const startCI = dragStartRef.current.index;
+    const targetCI = Math.max(
+      1,
+      Math.min(startCI + cardsMoved, 2 * N - 2),
+    );
+    setCenterIndex(targetCI);
+    setDragOffset(0);
+    isDraggingRef.current = false;
+  }, [N]);
 
   useEffect(() => {
-    const timer = setInterval(nextTestimonial, 6000);
-    return () => clearInterval(timer);
-  }, [nextTestimonial, activeFilter]);
+    if (isHovered) {
+      clearInterval(autoplayRef.current);
+      return;
+    }
+    autoplayRef.current = setInterval(goNext, 5000);
+    return () => clearInterval(autoplayRef.current);
+  }, [goNext, isHovered]);
 
-  const current = filteredTestimonials[activeTestimonial] ?? filteredTestimonials[0];
+  const getCardMeta = (di: number) => {
+    const distance = Math.abs(di - centerIndex);
+    const isActive = distance === 0;
+    return {
+      scale: isActive ? 1 : distance === 1 ? 0.88 : 0.78,
+      opacity: isActive ? 1 : distance === 1 ? 0.65 : 0.4,
+      translateY: isActive ? -8 : 0,
+      rotateY: distance === 0 ? 0 : di < centerIndex ? -3 : 3,
+    };
+  };
+
+  const trackX = getTrackX(centerIndex, containerWidth) + dragOffset;
 
   return (
     <>
-      {/* ACHIEVEMENTS SECTION */}
+      {/* ── ACHIEVEMENTS ── */}
       <section
         className="bg-[hsl(var(--background))] py-20 md:py-28"
         data-testid="section-achievements"
       >
         <div className="container-school">
-          {/* Header */}
           <div className="max-w-3xl">
             <span className="font-mono-school text-[.65rem] font-bold uppercase tracking-[.15em] text-[hsl(var(--primary))]">
               Our Achievements
@@ -1415,11 +1518,12 @@ function AchievementsAndTestimonials() {
               Let the Work Speak.
             </h2>
             <p className="mt-5 max-w-xl text-lg leading-relaxed text-[hsl(var(--muted-foreground))]">
-              Excellence isn't something we claim. It's something we demonstrate — through our results, our students, and our impact.
+              Excellence isn't something we claim. It's something we
+              demonstrate — through our results, our students, and our
+              impact.
             </p>
           </div>
 
-          {/* Statistics */}
           <div className="mt-16 grid grid-cols-2 gap-6 lg:grid-cols-4">
             {achievementStats.map((stat) => (
               <div
@@ -1436,7 +1540,6 @@ function AchievementsAndTestimonials() {
             ))}
           </div>
 
-          {/* Achievement Timeline */}
           <div className="mt-20">
             <span className="font-mono-school text-[.65rem] font-bold uppercase tracking-[.15em] text-[hsl(var(--primary))]">
               Our Record
@@ -1472,7 +1575,6 @@ function AchievementsAndTestimonials() {
             </div>
           </div>
 
-          {/* Beyond the Classroom */}
           <div className="mt-20 grid gap-10 lg:grid-cols-2 lg:items-center">
             <div className="overflow-hidden rounded-2xl">
               <img
@@ -1489,7 +1591,8 @@ function AchievementsAndTestimonials() {
                 Education That Shapes the Whole Student
               </h3>
               <p className="mt-4 max-w-lg text-[hsl(var(--muted-foreground))]">
-                At Petta, learning extends far beyond textbooks. We nurture talent, character, leadership and innovation.
+                At Petta, learning extends far beyond textbooks. We nurture
+                talent, character, leadership and innovation.
               </p>
               <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
                 {beyondItems.map((item) => (
@@ -1498,7 +1601,9 @@ function AchievementsAndTestimonials() {
                       {item.icon}
                     </div>
                     <div>
-                      <h4 className="font-display text-sm font-semibold">{item.title}</h4>
+                      <h4 className="font-display text-sm font-semibold">
+                        {item.title}
+                      </h4>
                       <p className="mt-1 text-xs leading-relaxed text-[hsl(var(--muted-foreground))]">
                         {item.description}
                       </p>
@@ -1517,114 +1622,167 @@ function AchievementsAndTestimonials() {
         </div>
       </section>
 
-      {/* TESTIMONIALS SECTION */}
+      {/* ── TESTIMONIALS — CINEMATIC CAROUSEL ── */}
       <section
-        className="bg-[hsl(var(--primary))] py-20 text-[hsl(var(--primary-foreground))] md:py-28"
+        className="relative overflow-hidden bg-[hsl(216,40%,97%)] py-20 md:py-28"
         data-testid="section-testimonials"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
-        <div className="container-school">
+        {/* Subtle oversized quotation marks */}
+        <div className="pointer-events-none absolute inset-0 select-none overflow-hidden">
+          <span className="absolute -right-10 -top-16 font-display text-[280px] leading-none text-[hsl(var(--primary)/.04)]">
+            &ldquo;
+          </span>
+          <span className="absolute -bottom-24 -left-10 font-display text-[280px] leading-none text-[hsl(var(--primary)/.04)]">
+            &rdquo;
+          </span>
+        </div>
+
+        <div className="relative container-school">
           {/* Header */}
           <div className="text-center">
-            <span className="font-mono-school text-[.65rem] font-bold uppercase tracking-[.15em] text-[hsl(var(--accent))]">
-              Voices From Our Community
+            <span className="font-mono-school text-[.65rem] font-bold uppercase tracking-[.15em] text-[hsl(var(--primary))]">
+              What Our Community Says
             </span>
             <h2 className="mt-4 font-display text-4xl font-semibold leading-[.97] tracking-[-.03em] md:text-5xl">
-              What Our Community Says.
+              More Than a School.
+              <br className="hidden md:block" />
+              A Place That Shapes Lives.
             </h2>
-            <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-[hsl(var(--primary-foreground)/.7)]">
-              A school experience that stays with you.
+            <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-[hsl(var(--muted-foreground))]">
+              Real experiences from the students, parents, teachers and
+              alumni who have been part of our journey.
             </p>
           </div>
 
-          {/* Role Filters */}
-          <div className="mt-10 flex flex-wrap justify-center gap-2">
-            {roleFilters.map((role) => (
-              <button
-                key={role}
-                type="button"
-                onClick={() => setActiveFilter(role)}
-                className={`rounded-full border px-4 py-2 font-mono-school text-[.65rem] font-bold uppercase tracking-[.12em] transition-colors ${
-                  activeFilter === role
-                    ? "border-[hsl(var(--accent))] bg-[hsl(var(--accent))] text-[hsl(var(--primary))]"
-                    : "border-[hsl(var(--primary-foreground)/.2)] text-[hsl(var(--primary-foreground)/.6)] hover:border-[hsl(var(--primary-foreground)/.4)]"
-                }`}
+          {/* Main composition — quote left, carousel right */}
+          <div className="mt-16 grid gap-10 lg:grid-cols-[2fr_3fr] lg:items-center">
+            {/* Left — Animated Quote */}
+            <div className="lg:pr-8">
+              <div
+                key={dataIndex}
+                style={{ animation: "fadeInUp 0.6s ease-out both" }}
               >
-                {role}
-              </button>
-            ))}
-          </div>
-
-          {/* Featured Testimonial */}
-          {current && (
-            <div className="mt-14 grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:items-center">
-              {/* Quote Side */}
-              <div>
-                <Quote size={40} className="text-[hsl(var(--accent))]" />
-                <blockquote className="mt-6 font-display text-2xl font-medium leading-snug md:text-3xl">
+                <span className="block font-display text-[80px] leading-none text-[hsl(var(--primary)/.12)]">
+                  &ldquo;
+                </span>
+                <blockquote className="mt-2 max-w-md font-display text-2xl font-medium leading-snug text-[hsl(var(--foreground))] md:text-3xl">
                   {current.quote}
                 </blockquote>
-                <div className="mt-8 flex items-center gap-4">
-                  <img
-                    src={current.image}
-                    alt={current.name}
-                    className="h-14 w-14 rounded-full object-cover ring-2 ring-[hsl(var(--accent)/.3)]"
-                  />
-                  <div>
-                    <div className="font-display text-base font-semibold">
-                      {current.name}
-                    </div>
-                    <div className="font-mono-school text-[.6rem] uppercase tracking-[.12em] text-[hsl(var(--primary-foreground)/.55)]">
-                      {current.detail}
-                    </div>
+                <div className="mt-8">
+                  <div className="font-display text-lg font-semibold text-[hsl(var(--foreground))]">
+                    {current.name}
+                  </div>
+                  <div className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">
+                    {current.detail}
+                  </div>
+                  <div className="mt-3 inline-block rounded-full bg-[hsl(var(--primary)/.08)] px-3 py-1 font-mono-school text-[.6rem] font-bold uppercase tracking-[.12em] text-[hsl(var(--primary))]">
+                    {current.role}
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Image Side */}
-              <div className="relative">
-                <div className="absolute -inset-4 rounded-3xl bg-[hsl(var(--accent)/.1)]" />
-                <img
-                  src={current.image}
-                  alt={current.name}
-                  className="relative h-80 w-full rounded-2xl object-cover md:h-[400px]"
-                />
+            {/* Right — Dynamic Card Carousel */}
+            <div
+              ref={containerRef}
+              className="relative"
+              style={{ touchAction: "pan-y" }}
+            >
+              <div
+                className="flex"
+                style={{
+                  gap: CARD_GAP,
+                  transform: `translateX(${trackX}px)`,
+                  transition: transitionEnabled
+                    ? "transform 700ms cubic-bezier(0.32, 0.72, 0, 1)"
+                    : "none",
+                  willChange: "transform",
+                }}
+                onTransitionEnd={handleTransitionEnd}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+              >
+                {displayItems.map((item, i) => {
+                  const { scale, opacity, translateY, rotateY } =
+                    getCardMeta(i);
+                  return (
+                    <div
+                      key={`${item.name}-${i}`}
+                      className="flex-none"
+                      style={{
+                        width: CARD_W,
+                        transform: `scale(${scale}) translateY(${translateY}px) rotateY(${rotateY}deg)`,
+                        opacity,
+                        transition: transitionEnabled
+                          ? "transform 500ms ease, opacity 500ms ease"
+                          : "none",
+                      }}
+                    >
+                      <div className="overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] shadow-lg transition-shadow duration-500">
+                        <div className="aspect-[3/4] overflow-hidden">
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="h-full w-full object-cover transition-transform duration-700"
+                            style={{
+                              transform: `scale(${scale === 1 ? 1.05 : 1})`,
+                            }}
+                            draggable={false}
+                          />
+                        </div>
+                        <div className="p-4">
+                          <div className="font-display text-sm font-semibold text-[hsl(var(--foreground))]">
+                            {item.name}
+                          </div>
+                          <div className="mt-1 font-mono-school text-[.6rem] uppercase tracking-[.1em] text-[hsl(var(--muted-foreground))]">
+                            {item.role}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
-          )}
+          </div>
 
           {/* Navigation */}
-          <div className="mt-10 flex items-center justify-center gap-4">
-            <button
-              type="button"
-              onClick={prevTestimonial}
-              aria-label="Previous testimonial"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-[hsl(var(--primary-foreground)/.2)] text-[hsl(var(--primary-foreground)/.6)] transition-colors hover:border-[hsl(var(--primary-foreground)/.5)] hover:text-[hsl(var(--primary-foreground))]"
-            >
-              <ChevronLeft size={18} />
-            </button>
-            <div className="flex gap-2">
-              {filteredTestimonials.map((_, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => setActiveTestimonial(i)}
-                  aria-label={`Go to testimonial ${i + 1}`}
-                  className={`h-2.5 rounded-full transition-all ${
-                    i === activeTestimonial
-                      ? "w-7 bg-[hsl(var(--accent))]"
-                      : "w-2.5 bg-[hsl(var(--primary-foreground)/.25)]"
-                  }`}
-                />
-              ))}
+          <div className="mt-12 flex flex-col items-center gap-4">
+            <div className="flex items-center gap-6">
+              <button
+                type="button"
+                onClick={goPrev}
+                aria-label="Previous testimonial"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--card))] text-[hsl(var(--muted-foreground))] transition-colors hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <span className="min-w-[60px] text-center font-mono-school text-sm font-bold tracking-wider text-[hsl(var(--foreground))]">
+                {String(dataIndex + 1).padStart(2, "0")} /{" "}
+                {String(N).padStart(2, "0")}
+              </span>
+              <button
+                type="button"
+                onClick={goNext}
+                aria-label="Next testimonial"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--card))] text-[hsl(var(--muted-foreground))] transition-colors hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
+              >
+                <ChevronRight size={18} />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={nextTestimonial}
-              aria-label="Next testimonial"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-[hsl(var(--primary-foreground)/.2)] text-[hsl(var(--primary-foreground)/.6)] transition-colors hover:border-[hsl(var(--primary-foreground)/.5)] hover:text-[hsl(var(--primary-foreground))]"
-            >
-              <ChevronRight size={18} />
-            </button>
+
+            {/* Progress bar */}
+            <div className="h-0.5 w-48 overflow-hidden rounded-full bg-[hsl(var(--border))]">
+              <div
+                className="h-full rounded-full bg-[hsl(var(--primary))] transition-all duration-500"
+                style={{
+                  width: `${((dataIndex + 1) / N) * 100}%`,
+                }}
+              />
+            </div>
           </div>
         </div>
       </section>
