@@ -1,0 +1,15 @@
+{
+  "name": "petta",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --filter @workspace/petta-school dev",
+    "dev:api": "pnpm --filter @workspace/api-server dev",
+    "build": "pnpm --filter @workspace/petta-school build",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
