@@ -1,8 +1,4 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <defs>
-    <clipPath id="circle">
-      <circle cx="32" cy="32" r="32"/>
-    </clipPath>
-  </defs>
-  <image href="/logo.jpg" width="64" height="64" clip-path="url(#circle)" preserveAspectRatio="xMidYMid slice"/>
+  <circle cx="32" cy="32" r="32" fill="#0F2942"/>
+  <text x="32" y="42" text-anchor="middle" font-family="Georgia, serif" font-size="32" font-weight="600" fill="#31A8D9">P</text>
 </svg>
