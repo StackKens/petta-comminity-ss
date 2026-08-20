@@ -1533,7 +1533,7 @@ function AchievementsAndTestimonials() {
 
       {/* ── TESTIMONIALS ── */}
       <section
-        className="relative overflow-hidden bg-[hsl(216,40%,97%)] py-20 md:py-28"
+        className="relative overflow-hidden bg-[hsl(216,40%,97%)] py-16 md:py-28"
         data-testid="section-testimonials"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -1574,7 +1574,7 @@ function AchievementsAndTestimonials() {
                   className="flex-none"
                   style={{ width: CARD_W }}
                 >
-                  <div className="flex h-full flex-col rounded-xl border border-white/60 bg-white/70 px-7 pt-10 pb-8 shadow-[0_4px_24px_-8px_hsl(var(--primary)/.1)] backdrop-blur-xl">
+                  <div className="flex h-full flex-col rounded-lg border border-white/60 bg-white/70 px-7 pt-10 pb-8 shadow-[0_4px_24px_-8px_hsl(var(--primary)/.1)] backdrop-blur-xl">
                     {/* Decorative quote */}
                     <span className="absolute left-6 top-4 font-display text-[5rem] leading-none text-[hsl(var(--primary)/.08)] select-none">
                       &ldquo;
