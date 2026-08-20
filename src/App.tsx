@@ -166,10 +166,11 @@ function SchoolMark({ compact = false }: { compact?: boolean }) {
       className={`flex items-center gap-3 ${compact ? "scale-90 origin-left" : ""}`}
       data-testid="brand-school-mark"
     >
-      <div className="relative grid h-11 w-11 shrink-0 place-items-center bg-[hsl(var(--accent))] text-[hsl(var(--primary))]">
-        <div className="absolute inset-[5px] border border-[hsl(var(--primary)/.45)]" />
-        <span className="font-display text-xl font-semibold">P</span>
-      </div>
+      <img
+        src="/logo.jpg"
+        alt="Petta Community Secondary School logo"
+        className="h-11 w-11 shrink-0 rounded-full object-cover"
+      />
       <div className="leading-none">
         <div className="font-display text-[1.05rem] font-semibold tracking-tight text-[hsl(var(--primary-foreground))]">
           Petta Community
