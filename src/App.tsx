@@ -59,7 +59,7 @@ const navItems: { label: string; id: SectionId }[] = [
 ];
 
 const imageSources = {
-  hero: "https://images.pexels.com/photos/8613089/pexels-photo-8613089.jpeg?auto=compress&cs=tinysrgb&w=1800",
+  hero: "/class.jpeg",
   students:
     "https://images.pexels.com/photos/5212345/pexels-photo-5212345.jpeg?auto=compress&cs=tinysrgb&w=1200",
   library:
@@ -72,50 +72,57 @@ const imageSources = {
     "https://images.pexels.com/photos/2280571/pexels-photo-2280571.jpeg?auto=compress&cs=tinysrgb&w=1200",
   landscape:
     "https://images.pexels.com/photos/1131774/pexels-photo-1131774.jpeg?auto=compress&cs=tinysrgb&w=1400",
+  talent: "/talent.jpeg",
+  hm: "/hm.jpeg",
+  alevel: "/alevel.jpg",
+  modernclass: "/modernclass.jpg",
+  lab: "/lab.jpg",
+  computerlab: "/computerlab.jpeg",
+  grounds: "/grounds.jpeg",
 };
 
 const facilities = [
   {
     name: "Modern classrooms",
     kind: "Learning spaces",
-    image: imageSources.classroom,
+    image: imageSources.modernclass,
     description:
-      "Bright, focused spaces designed for discussion, teaching and deep work.",
+      "Bright, spacious classrooms designed for focused learning. Each room is equipped with comfortable seating, adequate lighting, and a conducive atmosphere for both teaching and discussion.",
   },
   {
     name: "Science laboratories",
     kind: "Practical learning",
-    image: imageSources.science,
+    image: imageSources.lab,
     description:
-      "A placeholder for laboratory photography and confirmed equipment details.",
+      "Well-equipped laboratories for Physics, Chemistry, and Biology. Students gain hands-on experience through guided experiments and practical sessions that bring scientific concepts to life.",
   },
   {
     name: "Computer laboratory",
     kind: "Digital fluency",
-    image: imageSources.students,
+    image: imageSources.computerlab,
     description:
-      "A place for learners to build the confidence to work in a digital world.",
+      "A fully equipped computer lab where students build digital literacy skills. From basic computer operation to programming and research, learners gain confidence in using technology.",
   },
   {
     name: "Library",
     kind: "Independent study",
     image: imageSources.library,
     description:
-      "A calm home for reading, research and the habits of a lifelong learner.",
+      "A well-stocked library providing a calm environment for reading, research, and independent study. Students have access to textbooks, reference materials, and reading collections.",
   },
   {
     name: "Sports grounds",
     kind: "Movement & teamwork",
-    image: imageSources.sport,
+    image: "/talent.jpg",
     description:
-      "Space for the discipline, resilience and joy found in active participation.",
+      "Expansive sports grounds for football, athletics, basketball, and other physical activities. Sport is an essential part of building discipline, resilience, and teamwork.",
   },
   {
     name: "School grounds",
     kind: "Community life",
-    image: imageSources.landscape,
+    image: imageSources.grounds,
     description:
-      "The wider campus story will be added when approved school photography is available.",
+      "A well-maintained campus offering a safe and welcoming environment. The school grounds provide space for assembly, outdoor activities, and community gatherings.",
   },
 ];
 
@@ -567,8 +574,8 @@ function About() {
         <div className="grid gap-12 lg:grid-cols-[.9fr_1.1fr] lg:gap-20">
           <div className="relative min-h-[450px]">
             <ImageFrame
-              src={imageSources.students}
-              alt="Learners collaborating at school"
+              src={imageSources.alevel}
+              alt="Petta Community Secondary School"
               className="absolute inset-0 h-[390px] md:h-[470px]"
               label="A culture of possibility"
             />
@@ -626,23 +633,30 @@ function About() {
             </div>
           </div>
         </div>
-        <div className="mt-24 grid gap-10 border-t border-[hsl(var(--border))] pt-10 md:grid-cols-[1fr_1.4fr] md:items-start">
-          <div>
-            <div className="eyebrow text-[hsl(var(--muted-foreground))]">
-              A note from leadership
-            </div>
-            <h3 className="mt-4 font-display text-3xl font-semibold leading-tight md:text-4xl">
-              “We see the whole learner.”
-            </h3>
+        <div className="mt-24 border-t border-[hsl(var(--border))] pt-10">
+          <div className="eyebrow text-[hsl(var(--muted-foreground))]">
+            A note from leadership
           </div>
-          <div>
-            <Quote size={28} className="mb-5 text-[hsl(var(--accent))]" />
-            <p className="font-display text-2xl leading-tight text-[hsl(var(--primary))] md:text-3xl">
-              “[Insert approved Headteacher / Principal message about academic
-              purpose, character and community.]”
-            </p>
-            <div className="mt-6 font-mono-school text-[.65rem] uppercase tracking-[.12em] text-[hsl(var(--muted-foreground))]">
-              [Headteacher / Principal name] · [Position]
+          <h3 className="mt-4 font-display text-3xl font-semibold leading-tight md:text-4xl">
+            “We see the whole learner.”
+          </h3>
+          <div className="mt-10 grid gap-8 md:grid-cols-[auto_1fr] md:items-center">
+            <ImageFrame
+              src={imageSources.hm}
+              alt="Bayeke Peter - Headteacher"
+              className="h-48 w-48 lg:h-56 lg:w-56"
+            />
+            <div className="border-l-2 border-[hsl(var(--accent))] pl-6">
+              <Quote size={24} className="mb-4 text-[hsl(var(--accent))]" />
+              <p className="font-display text-xl leading-relaxed text-[hsl(var(--primary))] md:text-2xl">
+                “At Petta Community Secondary School, we believe every child
+                deserves the chance to grow — not just in knowledge, but in
+                character. Our role is to guide, challenge and inspire young
+                people to become the best version of themselves.”
+              </p>
+              <div className="mt-5 font-mono-school text-[.65rem] uppercase tracking-[.12em] text-[hsl(var(--muted-foreground))]">
+                Bayeke Peter · Headteacher
+              </div>
             </div>
           </div>
         </div>
@@ -1031,8 +1045,8 @@ function StudentLife() {
             copy="The strongest school days are full of purposeful work, shared rituals, movement, questions and the quiet discovery of what you can do."
           />
           <ImageFrame
-            src={imageSources.sport}
-            alt="Students participating in sport"
+            src={imageSources.talent}
+            alt="Students showcasing their talents"
             className="h-64 lg:h-80"
             label="Participation matters"
           />
@@ -1133,12 +1147,10 @@ function Facilities({
               type="button"
               key={facility.name}
               onClick={() => onOpen(facility)}
-              className={`group relative block overflow-hidden text-left ${index === 0 ? "lg:col-span-7 lg:row-span-2" : index === 1 ? "lg:col-span-5" : "lg:col-span-5"}`}
+              className="group relative block overflow-hidden text-left lg:col-span-4"
               data-testid={`button-facility-${index}`}
             >
-              <div
-                className={`${index === 0 ? "h-[380px] lg:h-full lg:min-h-[510px]" : "h-56"}`}
-              >
+              <div className="h-56">
                 <ImageFrame
                   src={facility.image}
                   alt={facility.name}
@@ -1702,9 +1714,6 @@ function Modal({
           <p className="mt-4 max-w-lg leading-7 text-[hsl(var(--muted-foreground))]">
             {facility.description}
           </p>
-          <div className="mt-7 border-t border-[hsl(var(--border))] pt-5 text-sm text-[hsl(var(--muted-foreground))]">
-            [Insert confirmed facility details and approved campus photography]
-          </div>
         </div>
       </div>
     </div>
